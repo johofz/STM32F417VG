@@ -19,6 +19,29 @@ namespace STM32F417VG
 
         int EnableInterrupt(DMA_Stream_TypeDef *stream)
         {
+            if (!IsDmaStream(stream)) return 0;
+
+            IRQn_Type irq;  // Window WatchDog Interrupt as placeholder
+            if (stream == DMA1_Stream0) irq = DMA1_Stream0_IRQn;
+            else if (stream == DMA1_Stream1) irq = DMA1_Stream1_IRQn;
+            else if (stream == DMA1_Stream2) irq = DMA1_Stream2_IRQn;
+            else if (stream == DMA1_Stream3) irq = DMA1_Stream3_IRQn;
+            else if (stream == DMA1_Stream4) irq = DMA1_Stream4_IRQn;
+            else if (stream == DMA1_Stream5) irq = DMA1_Stream5_IRQn;
+            else if (stream == DMA1_Stream6) irq = DMA1_Stream6_IRQn;
+            else if (stream == DMA1_Stream7) irq = DMA1_Stream7_IRQn;
+            else if (stream == DMA2_Stream0) irq = DMA2_Stream0_IRQn;
+            else if (stream == DMA2_Stream1) irq = DMA2_Stream1_IRQn;
+            else if (stream == DMA2_Stream2) irq = DMA2_Stream2_IRQn;
+            else if (stream == DMA2_Stream3) irq = DMA2_Stream3_IRQn;
+            else if (stream == DMA2_Stream4) irq = DMA2_Stream4_IRQn;
+            else if (stream == DMA2_Stream5) irq = DMA2_Stream5_IRQn;
+            else if (stream == DMA2_Stream6) irq = DMA2_Stream6_IRQn;
+            else irq = DMA2_Stream7_IRQn;
+            
+            __NVIC_SetPriority(irq, 0);
+            __NVIC_EnableIRQ(irq);
+
             return 1;
         }
 

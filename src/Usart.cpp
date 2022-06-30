@@ -4,103 +4,90 @@ namespace STM32F417VG
 {
     namespace USART
     {
-        int SetupAsync(USART_TypeDef *usart, uint32_t baud, uint8_t alternativPins)
+        int EnablePeripheral(USART_TypeDef *usart)
+        {
+            if (!IsUsart(usart)) return 0;
+
+            if (usart == USART1) RCC->APB2ENR |= (RCC_APB2ENR_USART1EN);
+            else if (usart == USART2) RCC->APB1ENR |= (RCC_APB1ENR_USART2EN);
+            else if (usart == USART2) RCC->APB1ENR |= (RCC_APB1ENR_USART3EN);
+            else if (usart == USART2) RCC->APB2ENR |= (RCC_APB2ENR_USART6EN);
+            else if (usart == USART2) RCC->APB1ENR |= (RCC_APB1ENR_UART4EN);
+            else if (usart == USART2) RCC->APB1ENR |= (RCC_APB1ENR_UART5EN);
+
+            return 1;
+        }
+
+        int ConfigureGpios(USART_TypeDef *usart, uint8_t alternatePins)
         {
             if (!IsUsart(usart)) return 0;
 
             if (usart == USART1)
             {
-                RCC->APB2ENR |= (RCC_APB2ENR_USART1EN); // enable USART peripheral
-
-                if (!alternativPins)
+                if (!alternatePins)
                 {
                     RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOAEN);  // enable GPIO peripheral
-                    GPIOA->MODER |= (2 << 18);  // PA9 (TX) mode: alternate function
-                    GPIOA->MODER |= (2 << 20);  // PA10 (RX) mode: alternate function
-                    GPIOA->AFR[1] |= (7 << 4);  // PA9 (TX) alternate function: AF7 (USART1_TX)
-                    GPIOA->AFR[1] |= (7 << 8);  // PA10 (RX) alternate function: AF7 (USART1_RX)
+                    GPIOA->MODER |= ((2 << 18) | (2 << 20));  // PA9+10 (TX/RX) mode: alternate function
+                    GPIOA->AFR[1] |= ((7 << 4) | (7 << 8));  // PA9+10 (TX/RX) alternate function: AF7 (USART1)
                 }
                 else
                 {
                     RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOBEN);
-                    GPIOB->MODER |= (2 << 12);  // PB6 (TX) mode: alternate function
-                    GPIOB->MODER |= (2 << 14);  // PB7 (RX) mode: alternate function
-                    GPIOB->AFR[0] |= (7 << 24);  // PB6 (TX) alternate function: AF7 (USART1_TX)
-                    GPIOB->AFR[0] |= (7 << 28);  // PB7 (RX) alternate function: AF7 (USART1_RX)
+                    GPIOB->MODER |= ((2 << 12) | (2 << 14));  // PB6+7 (TX/RX) mode: alternate function                    
+                    GPIOB->AFR[0] |= ((7 << 24) | (7 << 28));  // PB6+7 (TX/RX) alternate function: AF7 (USART1)                    
                 }
-
             }
             else if (usart == USART2)
             {
-                RCC->APB1ENR |= (RCC_APB1ENR_USART2EN); // enable USART peripheral
-
-                if (!alternativPins)
+                if (!alternatePins)
                 {
                     RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOAEN);  // enable GPIO peripheral
-                    GPIOA->MODER |= (2 << 4);  // PA2 (TX) mode: alternate function
-                    GPIOA->MODER |= (2 << 6);  // PA3 (RX) mode: alternate function
-                    GPIOA->AFR[0] |= (7 << 8);  // PA2 (TX) alternate function: AF7 (USART2_TX)
-                    GPIOA->AFR[0] |= (7 << 12);  // PA3 (RX) alternate function: AF7 (USART2_RX)
+                    GPIOA->MODER |= ((2 << 4) | (2 << 6));  // PA2+3 (TX/RX) mode: alternate function
+                    GPIOA->AFR[0] |= ((7 << 8) | (7 << 12));  // PA2 (TX) alternate function: AF7 (USART2)                    
                 }
                 else
                 {
                     RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOBEN);
-                    GPIOB->MODER |= (2 << 10);  // PB5 (TX) mode: alternate function
-                    GPIOB->MODER |= (2 << 12);  // PB6 (RX) mode: alternate function
-                    GPIOB->AFR[0] |= (7 << 20);  // PB5 (TX) alternate function: AF7 (USART2_TX)
-                    GPIOB->AFR[0] |= (7 << 24);  // PB6 (RX) alternate function: AF7 (USART2_RX)
+                    GPIOB->MODER |= ((2 << 10) | (2 << 12));  // PB5+6 (TX/RX) mode: alternate function
+                    GPIOB->AFR[0] |= ((7 << 20) | (7 << 24));  // PB5+6 (TX/RX) alternate function: AF7 (USART2)
                 }
             }
             else if (usart == USART3)
             {
-                RCC->APB1ENR |= (RCC_APB1ENR_USART3EN); // enable USART peripheral
-
-                if (!alternativPins)
+                if (!alternatePins)
                 {
                     RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOBEN);  // enable GPIO peripheral
-                    GPIOB->MODER |= (2 << 20);  // PB10 (TX) mode: alternate function
-                    GPIOB->MODER |= (2 << 22);  // PB11 (RX) mode: alternate function
-                    GPIOB->AFR[1] |= (7 << 8);  // PB10 (TX) alternate function: AF7 (USART3_TX)
-                    GPIOB->AFR[1] |= (7 << 12); // PB11 (RX) alternate function: AF7 (USART3_RX)
+                    GPIOB->MODER |= ((2 << 20) | (2 << 22));  // PB10+11 (TX/RX) mode: alternate function                    
+                    GPIOB->AFR[1] |= ((7 << 8) | (7 << 12));  // PB10+11 (TX/RX) alternate function: AF7 (USART3)                    
                 }
                 else
                 {
                     RCC->AHB1ENR |= (RCC_AHB1ENR_GPIODEN);  // enable GPIO peripheral
-                    GPIOD->MODER |= (2 << 16);  // PD8 (TX) mode: alternate function
-                    GPIOD->MODER |= (2 << 18);  // PD9 (RX) mode: alternate function
-                    GPIOD->AFR[1] |= (7 << 8);  // PD8 (TX) alternate function: AF7 (USART3_TX)
-                    GPIOD->AFR[1] |= (7 << 12); // PD9 (RX) alternate function: AF7 (USART3_RX)
+                    GPIOD->MODER |= ((2 << 16) | (2 << 18));  // PD8+9 (TX/RX) mode: alternate function                    
+                    GPIOD->AFR[1] |= ((7 << 8) | (7 << 12));  // PD8 (TX/RX) alternate function: AF7 (USART3)                    
                 }
-
             }
             else if (usart == USART6)   // Only one Pin-Option
             {
-                RCC->APB2ENR |= (RCC_APB2ENR_USART6EN); // enable USART peripheral
                 RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOCEN);  // enable GPIO peripheral
-                GPIOC->MODER |= (2 << 12);  // PC6 (TX) mode: alternate function
-                GPIOC->MODER |= (2 << 14);  // PC7 (RX) mode: alternate function
-                GPIOC->AFR[0] |= (8 << 24); // PC6 (TX) alternate function: AF8 (USART6_TX)
-                GPIOC->AFR[0] |= (8 << 28); // PC7 (RX) alternate function: AF8 (USART6_RX)
+                GPIOC->MODER |= ((2 << 12) | (2 << 14));  // PC6+7 (TX/RX) mode: alternate function                
+                GPIOC->AFR[0] |= ((8 << 24) | (8 << 28)); // PC6 (TX) alternate function: AF8 (USART6)
             }
             else if (usart == UART4)
             {
                 RCC->APB1ENR |= (RCC_APB1ENR_UART4EN); // enable UART peripheral
 
-                if (!alternativPins)
+                if (!alternatePins)
                 {
                     RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOAEN);  // enable GPIO peripheral
-                    GPIOA->MODER |= (2 << 0);  // PA0 (TX) mode: alternate function
-                    GPIOA->MODER |= (2 << 2);  // PA1 (RX) mode: alternate function
-                    GPIOA->AFR[0] |= (8 << 0);  // PA0 (TX) alternate function: AF8 (UART4_TX)
-                    GPIOA->AFR[0] |= (8 << 4);  // PA1 (RX) alternate function: AF8 (UART4_RX)
+                    GPIOA->MODER |= ((2 << 0) | (2 << 2));  // PA0+1 (TX/RX) mode: alternate function                    
+                    GPIOA->AFR[0] |= ((8 << 0) | (8 << 4));  // PA0+1 (TX/RX) alternate function: AF8 (UART4)                    
                 }
                 else
                 {
                     RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOCEN);  // enable GPIO peripheral
-                    GPIOC->MODER |= (2 << 20);  // PC10 (TX) mode: alternate function
-                    GPIOC->MODER |= (2 << 22);  // PC11 (RX) mode: alternate function
-                    GPIOC->AFR[1] |= (8 << 8);  // PC10 (TX) alternate function: AF8 (USART4_TX)
-                    GPIOC->AFR[1] |= (8 << 12); // PC11 (RX) alternate function: AF8 (USART4_RX)
+                    GPIOC->MODER |= ((2 << 20) | (2 << 22));  // PC10+11 (TX/RX) mode: alternate function
+                    GPIOC->AFR[1] |= ((8 << 8) | (8 << 12));  // PC10+11 (TX/RX) alternate function: AF8 (USART4)
                 }
             }
             else if (usart == UART5)
@@ -111,9 +98,21 @@ namespace STM32F417VG
 
                 GPIOC->MODER |= (2 << 24);  // PC12 (TX) mode: alternate function
                 GPIOD->MODER |= (2 << 4);  // PD2 (RX) mode: alternate function
-                GPIOC->AFR[1] |= (8 << 16);  // PC12 (TX) alternate function: AF8 (UART5_TX)
+                GPIOC->AFR[1] |= (8 << 16);  // PC12 (TX) alternate function: AF8 (UART5)
                 GPIOD->AFR[0] |= (8 << 8);  // PD2 (RX) alternate function: AF8 (UART5_RX)            
             }
+
+            return 1;
+        }
+
+        int SetupAsync(USART_TypeDef *usart, uint32_t baud, uint8_t alternatePins)
+        {
+            if (!IsUsart(usart)) return 0;
+
+            EnablePeripheral(usart);
+            ConfigureGpios(usart, alternatePins);
+            
+            if (!SetBaud(usart, baud)) return 0;
 
             return 1;
         }
@@ -146,61 +145,17 @@ namespace STM32F417VG
             return 1;
         }
 
-        int SetupDma(USART_TypeDef *usart)
+        int SetupRcvDma(USART_TypeDef *usart)
         {
             if (!IsUsart(usart)) return 0;
 
             DMA_Stream_TypeDef *stream = GetDmaStreamRcv(usart);
             DMA::EnablePeriperal(stream);
             DMA::EnableInterrupt(stream);
-            
-            if (usart == USART1)
-            {
-                RCC->AHB1ENR |= (RCC_AHB1ENR_DMA2EN);
-                __NVIC_SetPriority(DMA2_Stream2_IRQn, 0);
-                __NVIC_EnableIRQ(DMA2_Stream2_IRQn);
-                stream = DMA2_Stream2;
-            }
-            else if (usart == USART2)
-            {
-                RCC->AHB1ENR |= (RCC_AHB1ENR_DMA1EN);
-                __NVIC_SetPriority(DMA1_Stream5_IRQn, 0);
-                __NVIC_EnableIRQ(DMA1_Stream5_IRQn);
-                stream = DMA1_Stream5;
-            }
-            else if (usart == USART3)
-            {
-                RCC->AHB1ENR |= (RCC_AHB1ENR_DMA1EN);
-                __NVIC_SetPriority(DMA1_Stream1_IRQn, 0);
-                __NVIC_EnableIRQ(DMA1_Stream1_IRQn);
-                stream = DMA1_Stream1;
-            }
-            else if (usart == USART6)
-            {
-                RCC->AHB1ENR |= (RCC_AHB1ENR_DMA2EN);
-                __NVIC_SetPriority(DMA2_Stream1_IRQn, 0);
-                __NVIC_EnableIRQ(DMA2_Stream1_IRQn);
-                stream = DMA2_Stream1;
-            }
-            else if (usart == UART4)
-            {
-                RCC->AHB1ENR |= (RCC_AHB1ENR_DMA1EN);
-                __NVIC_SetPriority(DMA1_Stream2_IRQn, 0);
-                __NVIC_EnableIRQ(DMA1_Stream2_IRQn);
-                stream = DMA1_Stream2;
-            }
-            else if (usart == UART5)
-            {
-                RCC->AHB1ENR |= (RCC_AHB1ENR_DMA1EN);
-                __NVIC_SetPriority(DMA1_Stream0_IRQn, 0);
-                __NVIC_EnableIRQ(DMA1_Stream0_IRQn);
-                stream = DMA1_Stream0;
-            }
 
             stream->CR = 0x00;
-            stream->CR |= (DMA_SxCR_EN);   // disable DMA stream
-
-            stream->CR |= ((1 << DMA_SxCR_PL_Pos) |    // Priority level: meduim
+            stream->CR |= (DMA_SxCR_EN);            // Disable DMA stream
+            stream->CR |= ((1 << DMA_SxCR_PL_Pos) | // Priority level: meduim
                 (DMA_SxCR_MINC) |                   // Memory increment mode: memory address pointer is incremented
                 (DMA_SxCR_TCIE) |                   // Transfer complete interrupt: enabled
                 (DMA_SxCR_HTIE) |                   // Half transfer interrupt: enabled

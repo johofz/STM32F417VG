@@ -15,8 +15,6 @@ set(CPU_PARAMETERS
     -mfpu=fpv4-sp-d16
     -mfloat-abi=hard)
 
-set(STARTUP_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/Device/startup_stm32f417xx.s)
-set(MCU_LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/Device/STM32F417VGTx_FLASH.ld)
 # ##############################################################################
 set(LIBRARY ${PROJECT_NAME})
 enable_language(C CXX ASM)
@@ -42,7 +40,7 @@ file(GLOB_RECURSE SOURCES
 # Executable files
 add_library(${LIBRARY}
     ${SOURCES}
-    ${STARTUP_SCRIPT})
+)
 
 # Embedded macros(defines)
 target_compile_definitions(${LIBRARY} PRIVATE
@@ -64,7 +62,7 @@ target_compile_options(${LIBRARY} PRIVATE
     $<$<CONFIG:Release>:-Og -g0>)
 
 target_link_options(${LIBRARY} PRIVATE
-    -T${MCU_LINKER_SCRIPT}
+    # -T${MCU_LINKER_SCRIPT}
     ${CPU_PARAMETERS}
     -Wl,-Map=${PROJECT_NAME}.map
     --specs=nosys.specs

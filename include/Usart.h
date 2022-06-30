@@ -8,9 +8,11 @@ namespace STM32F417VG
 {
     namespace USART
     {
-        int SetupAsync(USART_TypeDef *usart, uint32_t baud, uint8_t alternativePins);
+        int EnablePeripheral(USART_TypeDef *usart);
+        int ConfigureGpios(USART_TypeDef *usart, uint8_t alternatePins);
+        int SetupAsync(USART_TypeDef *usart, uint32_t baud, uint8_t alternatePins);
         int SetBaud(USART_TypeDef *usart, uint32_t baud);
-        int SetupDma(USART_TypeDef *usart);
+        int SetupRcvDma(USART_TypeDef *usart);
         int RcvDma(USART_TypeDef *usart, uint8_t *rxBuf, uint32_t size);
         int IsUsart(USART_TypeDef *usart);
 
