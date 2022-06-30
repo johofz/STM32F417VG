@@ -66,8 +66,7 @@ target_compile_options(${LIBRARY} PRIVATE
 target_link_options(${LIBRARY} PRIVATE
     -T${MCU_LINKER_SCRIPT}
     ${CPU_PARAMETERS}
-    -Wl,-Map=${
-PROJECT_NAME}.map
+    -Wl,-Map=${PROJECT_NAME}.map
     --specs=nosys.specs
     -Wl,--start-group
     -lc
