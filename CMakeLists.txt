@@ -18,7 +18,7 @@ set(CPU_PARAMETERS
 set(STARTUP_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/Device/startup_stm32f417xx.s)
 set(MCU_LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/Device/STM32F417VGTx_FLASH.ld)
 # ##############################################################################
-set(LIBRARY ${CMAKE_PROJECT_NAME})
+set(LIBRARY ${PROJECT_NAME})
 enable_language(C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -66,7 +66,8 @@ target_compile_options(${LIBRARY} PRIVATE
 target_link_options(${LIBRARY} PRIVATE
     -T${MCU_LINKER_SCRIPT}
     ${CPU_PARAMETERS}
-    -Wl,-Map=${CMAKE_PROJECT_NAME}.map
+    -Wl,-Map=${
+PROJECT_NAME}.map
     --specs=nosys.specs
     -Wl,--start-group
     -lc
