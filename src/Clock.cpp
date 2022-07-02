@@ -20,6 +20,14 @@ namespace STM32F417VG
             RCC->APB1ENR |= (RCC_APB1ENR_PWREN); // Enable Power
             FLASH->ACR |= ((FLASH_ACR_DCEN) | (FLASH_ACR_ICEN) | (FLASH_ACR_PRFTEN) | (FLASH_ACR_LATENCY_0WS)); // Internal Flash configuration
 
+            RCC->CFGR |= ((RCC_CFGR_PPRE1_DIV4) | (RCC_CFGR_PPRE2_DIV2));
+            RCC->PLLCFGR |= ((6 << RCC_PLLCFGR_PLLM_Pos) | (168 << RCC_PLLCFGR_PLLN_Pos) | (RCC_PLLCFGR_PLLSRC_HSE));
+            RCC->CR |= (RCC_CR_PLLON);  // Enable PLL
+            while (!(RCC->CR & (RCC_CR_PLLRDY))); // Wait for PLL to be ready
+
+            RCC->CFGR |= (RCC_CFGR_SW_PLL);
+            while (!(RCC->CFGR & (RCC_CFGR_SWS_PLL)));
+
             return 1;
         }
     }
