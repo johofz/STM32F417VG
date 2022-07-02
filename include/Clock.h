@@ -1,13 +1,14 @@
 #ifndef __RCC_H__
 #define __RCC_H__
 
-#include "stm32f417xx.h"
+#include <stm32f417xx.h>
 
 namespace STM32F417VG
 {
-    namespace RCC
+    namespace CLOCK
     {
         int SetupHSE(uint32_t clockspeed);
+        int SetupHSE();
     }
 }
 

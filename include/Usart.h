@@ -1,8 +1,8 @@
 #ifndef __USART_H__
 #define __USART_H__
 
-#include "stm32f417xx.h"
-#include "Dma.h"
+#include <stm32f417xx.h>
+#include <Dma.h>
 
 namespace STM32F417VG
 {
