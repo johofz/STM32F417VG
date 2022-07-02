@@ -9,6 +9,8 @@ namespace STM32F417VG
     {
         int SetupHSE(uint32_t clockspeed);
         int SetupHSE();
+
+        int SetupPLL(uint8_t m, uint8_t n, uint8_t p);
     }
 }
 
