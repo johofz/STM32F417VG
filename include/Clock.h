@@ -11,6 +11,8 @@ namespace STM32F417VG
         int SetupHSE();
 
         int SetupPLL(uint8_t m, uint8_t n, uint8_t p);
+        int SetExternalCrystal(uint32_t crystalSpeed);
+        uint32_t GetExternalCrystalSpeed();
     }
 }
 

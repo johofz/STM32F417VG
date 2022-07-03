@@ -8,9 +8,15 @@ namespace STM32F417VG
 {
     namespace USART
     {
+        enum PinOption
+        {
+            DEFAULT_PINS,
+            ALTERNATE_PINS
+        };
+
         int EnablePeripheral(USART_TypeDef *usart);
-        int ConfigureGpios(USART_TypeDef *usart, uint8_t alternatePins);
-        int SetupAsync(USART_TypeDef *usart, uint32_t baud, uint8_t alternatePins);
+        int ConfigureGpios(USART_TypeDef *usart, PinOption pinOption);
+        int SetupAsync(USART_TypeDef *usart, uint32_t baud, PinOption pinOption);
         int SetBaud(USART_TypeDef *usart, uint32_t baud);
         int SetupRcvDma(USART_TypeDef *usart);
         int RcvDma(USART_TypeDef *usart, uint8_t *rxBuf, uint32_t size);

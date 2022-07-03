@@ -18,13 +18,13 @@ namespace STM32F417VG
             return 1;
         }
 
-        int ConfigureGpios(USART_TypeDef *usart, uint8_t alternatePins)
+        int ConfigureGpios(USART_TypeDef *usart, PinOption pinOption)
         {
             if (!IsUsart(usart)) return 0;
 
             if (usart == USART1)
             {
-                if (!alternatePins)
+                if (pinOption == DEFAULT_PINS)
                 {
                     RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOAEN);  // enable GPIO peripheral
                     GPIOA->MODER |= ((2 << 18) | (2 << 20));  // PA9+10 (TX/RX) mode: alternate function
@@ -39,7 +39,7 @@ namespace STM32F417VG
             }
             else if (usart == USART2)
             {
-                if (!alternatePins)
+                if (pinOption == DEFAULT_PINS)
                 {
                     RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOAEN);  // enable GPIO peripheral
                     GPIOA->MODER |= ((2 << 4) | (2 << 6));  // PA2+3 (TX/RX) mode: alternate function
@@ -54,7 +54,7 @@ namespace STM32F417VG
             }
             else if (usart == USART3)
             {
-                if (!alternatePins)
+                if (pinOption == DEFAULT_PINS)
                 {
                     RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOBEN);  // enable GPIO peripheral
                     GPIOB->MODER |= ((2 << 20) | (2 << 22));  // PB10+11 (TX/RX) mode: alternate function                    
@@ -77,7 +77,7 @@ namespace STM32F417VG
             {
                 RCC->APB1ENR |= (RCC_APB1ENR_UART4EN); // enable UART peripheral
 
-                if (!alternatePins)
+                if (pinOption == DEFAULT_PINS)
                 {
                     RCC->AHB1ENR |= (RCC_AHB1ENR_GPIOAEN);  // enable GPIO peripheral
                     GPIOA->MODER |= ((2 << 0) | (2 << 2));  // PA0+1 (TX/RX) mode: alternate function                    
@@ -105,12 +105,12 @@ namespace STM32F417VG
             return 1;
         }
 
-        int SetupAsync(USART_TypeDef *usart, uint32_t baud, uint8_t alternatePins)
+        int SetupAsync(USART_TypeDef *usart, uint32_t baud, PinOption pinOption)
         {
             if (!IsUsart(usart)) return 0;
 
             EnablePeripheral(usart);
-            ConfigureGpios(usart, alternatePins);
+            ConfigureGpios(usart, pinOption);
             
             if (!SetBaud(usart, baud)) return 0;
 

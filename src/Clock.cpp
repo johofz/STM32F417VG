@@ -48,11 +48,22 @@ namespace STM32F417VG
                              (n << RCC_PLLCFGR_PLLN_Pos) |
                              (p_val << RCC_PLLCFGR_PLLN_Pos) |
                              (RCC_PLLCFGR_PLLSRC_HSE));
-                             
+
             RCC->CR |= (RCC_CR_PLLON);  // Enable PLL
             while (!(RCC->CR & (RCC_CR_PLLRDY))); // Wait for PLL to be ready
 
             return 1;
+        }
+
+        int SetExternalCrystalSpeed(uint32_t crystalSpeed)
+        {
+            _externalCrystalSpeed = crystalSpeed;
+            return 1;
+        }
+
+        uint32_t GetExternalCrystalSpeed()
+        {
+            return _externalCrystalSpeed;
         }
     }
 }
