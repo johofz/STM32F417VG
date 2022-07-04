@@ -28,6 +28,8 @@ namespace STM32F417VG
             RCC->CFGR |= (RCC_CFGR_SW_PLL);
             while (!(RCC->CFGR & (RCC_CFGR_SWS_PLL)));
 
+            SystemCoreClockUpdate();    // Updates SystemCoreClock Variable 
+
             return 1;
         }
 

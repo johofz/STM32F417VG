@@ -3,6 +3,9 @@
 
 #include <stm32f417xx.h>
 #include <Dma.h>
+#include <Time.h>
+
+#define USART_COUNT 6
 
 namespace STM32F417VG
 {
@@ -16,34 +19,60 @@ namespace STM32F417VG
 
         enum UsartError
         {
-            NO_ERROR,
+            SUCCESS,
             NO_USART,
-            INVALID_BAUD
+            INVALID_BAUD,
+            ALREADY_INITIALIZED,
+            NOT_INITIALIZED
         };
 
-        UsartError Init(USART_TypeDef *usart, uint32_t baud, PinOption pinOption);
+        typedef void (*UsartISR)(void);
 
-        UsartError SetupReceiveIdle(USART_TypeDef *usart, uint32_t baud, PinOption pinOption);
-        UsartError SetupReceiveDma(USART_TypeDef *usart);
-        
-        UsartError SetBaud(USART_TypeDef *usart, uint32_t baud);
-        UsartError EnablePeripheral(USART_TypeDef *usart);
-        UsartError ConfigureGpios(USART_TypeDef *usart, PinOption pinOption);
-        UsartError EnableInterrupt(USART_TypeDef *usart);
-        
-        UsartError Transmit(USART_TypeDef *usart, uint8_t *txBuf, uint32_t size);
-        UsartError TransmitDMA(USART_TypeDef *usart, uint8_t *txBuf, uint32_t size);
+        class Usart
+        {
+        public:
+            ~Usart() {}
 
-        UsartError Receive(USART_TypeDef *usart, uint8_t *rxBuf, uint32_t size);
-        UsartError ReceiveIdle(USART_TypeDef *usart, uint8_t *rxBuf, uint32_t size);
-        UsartError ReceiveDma(USART_TypeDef *usart, uint8_t *rxBuf, uint32_t size);
+            UsartError Init(USART_TypeDef *usart, uint32_t baud, PinOption pinOption);
+            UsartError DeInit();
 
+            UsartError SetupReceiveIdle(UsartISR isr);
+            UsartError SetupReceiveDma();
 
-        UsartError IsUsart(USART_TypeDef *usart);
+            UsartError Enable();
+            UsartError Disable();
+            UsartError EnableInterrupt();
+            UsartError RegisterISR(UsartISR isr);
+            UsartError ConfigureGpios(PinOption pinOption);
+            UsartError SetBaud(uint32_t baud);
 
-        DMA_Stream_TypeDef* GetDmaStreamRx(USART_TypeDef *usart);
-        DMA_Stream_TypeDef* GetDmaStreamTx(USART_TypeDef *usart);
+            UsartError Transmit(uint8_t *txBuf, uint32_t size);
+            UsartError TransmitDMA(uint8_t *txBuf, uint32_t size);
+            UsartError Receive(uint8_t *rxBuf, uint32_t size);
+            UsartError ReceiveIdle(uint8_t *rxBuf, uint32_t size);
+            UsartError ReceiveDma(uint8_t *rxBuf, uint32_t size);
+            
+            DMA_Stream_TypeDef* GetDmaStreamRx(USART_TypeDef *usart);
+            DMA_Stream_TypeDef* GetDmaStreamTx(USART_TypeDef *usart);
+
+        private:
+            UsartError IsUsart(USART_TypeDef *usart);
+
+            USART_TypeDef *m_usart;
+            uint32_t m_baud;
+            PinOption m_pinOption;
+            uint8_t m_initialized;
+            
+        };
+
     }
 }
+
+void USART1_IRQHandler(void);
+void USART2_IRQHandler(void);
+void USART3_IRQHandler(void);
+void USART6_IRQHandler(void);
+void UART4_IRQHandler(void);
+void UART5_IRQHandler(void);
 
 #endif // __USART_H__
