@@ -4,9 +4,92 @@ namespace STM32F417VG
 {
     namespace USART
     {
-        int EnablePeripheral(USART_TypeDef *usart)
+        UsartError _Error = NO_ERROR;
+
+        UsartError Init(USART_TypeDef *usart, uint32_t baud, PinOption pinOption)
         {
-            if (!IsUsart(usart)) return 0;
+            _Error = NO_ERROR;
+            if (IsUsart(usart) != NO_ERROR)
+                return _Error;
+
+            EnablePeripheral(usart);
+            ConfigureGpios(usart, pinOption);
+            SetBaud(usart, baud);
+
+            return _Error;
+        }
+
+        UsartError SetupReceiveIdle(USART_TypeDef *usart, uint32_t baud, PinOption pinOption)
+        {
+            _Error = NO_ERROR;
+            if (Init(usart, baud, pinOption) != NO_ERROR)
+                return _Error;
+            
+            EnableInterrupt(usart);    
+            usart->CR1 |= (USART_CR1_IDLEIE);
+            SetupReceiveDma(usart);
+
+            return _Error;
+        }
+
+        UsartError SetupReceiveDma(USART_TypeDef *usart)
+        {
+            _Error = NO_ERROR;
+            if (IsUsart(usart) != NO_ERROR)
+                return _Error;
+
+            DMA_Stream_TypeDef *stream = GetDmaStreamRx(usart);
+            DMA::EnablePeriperal(stream);
+            DMA::EnableInterrupt(stream);
+
+            stream->CR = 0x00;
+            stream->CR |= (DMA_SxCR_EN);            // Disable DMA stream
+            stream->CR |= ((1 << DMA_SxCR_PL_Pos) | // Priority level: meduim
+                (DMA_SxCR_MINC) |                   // Memory increment mode: memory address pointer is incremented
+                (DMA_SxCR_TCIE) |                   // Transfer complete interrupt: enabled
+                (DMA_SxCR_HTIE) |                   // Half transfer interrupt: enabled
+                (DMA_SxCR_TEIE) |                   // Transfer error interrupt: enabled
+                (DMA_SxCR_DMEIE));                  // Direct mode error interrupt: enabled
+
+            return _Error;
+        }
+
+        UsartError SetBaud(USART_TypeDef *usart, uint32_t baud)
+        {
+            _Error = NO_ERROR;
+            if (IsUsart(usart) != NO_ERROR)
+                return _Error;
+
+            switch (baud) 
+            {
+                case 9600:
+                case 19200:
+                case 28800:
+                case 38400:
+                case 57600:
+                case 76800:
+                case 115200:
+                    break;
+
+                default:
+                    _Error = INVALID_BAUD;
+                    return _Error;
+            }
+
+            float usartDiv = (float)SystemCoreClock / ((float)baud * 16.0f);
+            uint16_t mentissa = (uint16_t)usartDiv;
+            uint16_t fraction = (uint16_t)((usartDiv - mentissa) * 16.0f);
+            usart->BRR |= (mentissa << 4);
+            usart->BRR |= (fraction << 0);
+            
+            return _Error;
+        }
+
+        UsartError EnablePeripheral(USART_TypeDef *usart)
+        {
+            _Error = NO_ERROR;
+            if (IsUsart(usart) != NO_ERROR)
+                return _Error;
 
             if (usart == USART1) RCC->APB2ENR |= (RCC_APB2ENR_USART1EN);
             else if (usart == USART2) RCC->APB1ENR |= (RCC_APB1ENR_USART2EN);
@@ -15,12 +98,14 @@ namespace STM32F417VG
             else if (usart == USART2) RCC->APB1ENR |= (RCC_APB1ENR_UART4EN);
             else if (usart == USART2) RCC->APB1ENR |= (RCC_APB1ENR_UART5EN);
 
-            return 1;
+            return _Error;
         }
 
-        int ConfigureGpios(USART_TypeDef *usart, PinOption pinOption)
+        UsartError ConfigureGpios(USART_TypeDef *usart, PinOption pinOption)
         {
-            if (!IsUsart(usart)) return 0;
+            _Error = NO_ERROR;
+            if (IsUsart(usart) != NO_ERROR)
+                return _Error;
 
             if (usart == USART1)
             {
@@ -102,80 +187,101 @@ namespace STM32F417VG
                 GPIOD->AFR[0] |= (8 << 8);  // PD2 (RX) alternate function: AF8 (UART5_RX)            
             }
 
-            return 1;
+            return _Error;
         }
 
-        int SetupAsync(USART_TypeDef *usart, uint32_t baud, PinOption pinOption)
+        UsartError EnableInterrupt(USART_TypeDef *usart)
         {
-            if (!IsUsart(usart)) return 0;
+            _Error = NO_ERROR;
+            if (IsUsart(usart) != NO_ERROR)
+                return _Error;
 
-            EnablePeripheral(usart);
-            ConfigureGpios(usart, pinOption);
+            IRQn_Type irq;
+            if (usart == USART1) irq = USART1_IRQn;
+            else if (usart == USART2) irq = USART2_IRQn;
+            else if (usart == USART3) irq = USART3_IRQn; 
+            else if (usart == USART6) irq = USART6_IRQn;
+            else if (usart == UART4) irq = UART4_IRQn;
+            else irq = UART5_IRQn;
             
-            if (!SetBaud(usart, baud)) return 0;
+            __NVIC_SetPriority(irq, 0);
+            __NVIC_EnableIRQ(irq);
 
-            return 1;
+            return _Error;
         }
-
-        int SetBaud(USART_TypeDef *usart, uint32_t baud)
+        
+        UsartError Transmit(USART_TypeDef *usart, uint8_t *txBuf, uint32_t size)
         {
-            if (!IsUsart(usart)) return 0;
+            _Error = NO_ERROR;
+            if (IsUsart(usart) != NO_ERROR)
+                return _Error;
 
-            switch (baud) 
+            for (uint32_t i = 0; i < size; i++)
             {
-                case 9600:
-                case 19200:
-                case 28800:
-                case 38400:
-                case 57600:
-                case 76800:
-                case 115200:
-                    break;
-
-                default:
-                    return 0;
+                usart->DR = txBuf[i];
+                while (!(usart->SR & USART_SR_TXE));
             }
+            while (!(usart->SR & USART_SR_TC));
 
-            float usartDiv = (float)SystemCoreClock / ((float)baud * 16.0f);
-            uint16_t mentissa = (uint16_t)usartDiv;
-            uint16_t fraction = (uint16_t)((usartDiv - mentissa) * 16.0f);
-            usart->BRR |= (mentissa << 4);
-            usart->BRR |= (fraction << 0);
-            
-            return 1;
+            return _Error;
         }
 
-        int SetupRcvDma(USART_TypeDef *usart)
+        UsartError TransmitDMA(USART_TypeDef *usart, uint8_t *txBuf, uint32_t size)
         {
-            if (!IsUsart(usart)) return 0;
+            _Error = NO_ERROR;
+            if (IsUsart(usart) != NO_ERROR)
+                return _Error;
 
-            DMA_Stream_TypeDef *stream = GetDmaStreamRcv(usart);
-            DMA::EnablePeriperal(stream);
-            DMA::EnableInterrupt(stream);
+            DMA_Stream_TypeDef *stream = GetDmaStreamTx(usart);
+            stream->CR &= ~(DMA_SxCR_EN);
+            stream->PAR = (uint32_t)&usart->DR;
 
-            stream->CR = 0x00;
-            stream->CR |= (DMA_SxCR_EN);            // Disable DMA stream
-            stream->CR |= ((1 << DMA_SxCR_PL_Pos) | // Priority level: meduim
-                (DMA_SxCR_MINC) |                   // Memory increment mode: memory address pointer is incremented
-                (DMA_SxCR_TCIE) |                   // Transfer complete interrupt: enabled
-                (DMA_SxCR_HTIE) |                   // Half transfer interrupt: enabled
-                (DMA_SxCR_TEIE) |                   // Transfer error interrupt: enabled
-                (DMA_SxCR_DMEIE));                  // Direct mode error interrupt: enabled
-
-            return 1;
+            return _Error;
         }
 
-        int RcvDma(USART_TypeDef *usart, uint8_t *rxBuf, uint32_t size)
+        UsartError Receive(USART_TypeDef *usart, uint8_t *rxBuf, uint32_t size)
         {
-            if (!IsUsart(usart)) return 0;
+            _Error = NO_ERROR;
+            if (IsUsart(usart) != NO_ERROR)
+                return _Error;
+            return _Error;
+        }
 
-            DMA_Stream_TypeDef *stream = GetDmaStreamRcv(usart);
+        UsartError ReceiveIdle(USART_TypeDef *usart, uint8_t *rxBuf, uint32_t size)
+        {
+            _Error = NO_ERROR;
+            if (IsUsart(usart) != NO_ERROR)
+                return _Error;
+            return _Error;
+        }
+        
+        UsartError ReceiveDma(USART_TypeDef *usart, uint8_t *rxBuf, uint32_t size)
+        {
+            _Error = NO_ERROR;
+            if (IsUsart(usart) != NO_ERROR)
+                return _Error;
+
+            DMA_Stream_TypeDef *stream = GetDmaStreamRx(usart);
             DMA::SetupBuffer(stream, (uint32_t)&usart->DR, (uint32_t)rxBuf, size);
 
-            return 1;
+            return _Error;
         }
 
-        DMA_Stream_TypeDef* GetDmaStreamRcv(USART_TypeDef *usart)
+        UsartError IsUsart(USART_TypeDef *usart)
+        {
+            _Error = NO_ERROR;
+            if (usart == USART1 || usart == USART2 || usart == USART3 ||
+                usart == USART6 || usart == UART4 || usart == UART5)
+            {
+                _Error = NO_ERROR;
+                return _Error;
+            }
+
+            _Error = NO_USART;
+            return _Error;
+        }
+
+        DMA_Stream_TypeDef* GetDmaStreamRx(USART_TypeDef *usart)
         {
             DMA_Stream_TypeDef *dma = nullptr;
 
@@ -189,13 +295,19 @@ namespace STM32F417VG
             return dma;
         }
 
-        int IsUsart(USART_TypeDef *usart)
+        // TODO: Korrekte Streams eintragen! (wurde nur kopert als Platzhalter)
+        DMA_Stream_TypeDef* GetDmaStreamTx(USART_TypeDef *usart)
         {
-            if (usart == USART1 || usart == USART2 || usart == USART3 ||
-                usart == USART6 || usart == UART4 || usart == UART5)
-                return 1;
+            DMA_Stream_TypeDef *dma = nullptr;
 
-            return 0;
+            if (usart == USART1) dma = DMA2_Stream2;
+            else if (usart == USART2) dma = DMA1_Stream5;
+            else if (usart == USART3) dma = DMA1_Stream1;
+            else if (usart == USART6) dma = DMA2_Stream1;
+            else if (usart == UART4) dma = DMA1_Stream2;
+            else if (usart == UART5) dma = DMA1_Stream0;
+
+            return dma;
         }
     }
 }

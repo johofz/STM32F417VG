@@ -14,15 +14,35 @@ namespace STM32F417VG
             ALTERNATE_PINS
         };
 
-        int EnablePeripheral(USART_TypeDef *usart);
-        int ConfigureGpios(USART_TypeDef *usart, PinOption pinOption);
-        int SetupAsync(USART_TypeDef *usart, uint32_t baud, PinOption pinOption);
-        int SetBaud(USART_TypeDef *usart, uint32_t baud);
-        int SetupRcvDma(USART_TypeDef *usart);
-        int RcvDma(USART_TypeDef *usart, uint8_t *rxBuf, uint32_t size);
-        int IsUsart(USART_TypeDef *usart);
+        enum UsartError
+        {
+            NO_ERROR,
+            NO_USART,
+            INVALID_BAUD
+        };
 
-        DMA_Stream_TypeDef* GetDmaStreamRcv(USART_TypeDef *usart);
+        UsartError Init(USART_TypeDef *usart, uint32_t baud, PinOption pinOption);
+
+        UsartError SetupReceiveIdle(USART_TypeDef *usart, uint32_t baud, PinOption pinOption);
+        UsartError SetupReceiveDma(USART_TypeDef *usart);
+        
+        UsartError SetBaud(USART_TypeDef *usart, uint32_t baud);
+        UsartError EnablePeripheral(USART_TypeDef *usart);
+        UsartError ConfigureGpios(USART_TypeDef *usart, PinOption pinOption);
+        UsartError EnableInterrupt(USART_TypeDef *usart);
+        
+        UsartError Transmit(USART_TypeDef *usart, uint8_t *txBuf, uint32_t size);
+        UsartError TransmitDMA(USART_TypeDef *usart, uint8_t *txBuf, uint32_t size);
+
+        UsartError Receive(USART_TypeDef *usart, uint8_t *rxBuf, uint32_t size);
+        UsartError ReceiveIdle(USART_TypeDef *usart, uint8_t *rxBuf, uint32_t size);
+        UsartError ReceiveDma(USART_TypeDef *usart, uint8_t *rxBuf, uint32_t size);
+
+
+        UsartError IsUsart(USART_TypeDef *usart);
+
+        DMA_Stream_TypeDef* GetDmaStreamRx(USART_TypeDef *usart);
+        DMA_Stream_TypeDef* GetDmaStreamTx(USART_TypeDef *usart);
     }
 }
 
